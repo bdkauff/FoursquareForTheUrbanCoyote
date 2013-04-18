@@ -49,7 +49,7 @@ app.configure('development', function(){
 // ROUTES
 var routes = require('./routes/index.js');
 app.get('/', routes.index);
-app.post('/foursquare_postVenue'. routes.foursquare_postVenue);
+app.post('/foursquare_postVenue',routes.foursquare_postVenue);
 
 // create NodeJS HTTP server using 'app'
 
