@@ -35,9 +35,12 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
-
-  // database - skipping until week 5
-  app.db = mongoose.connect(process.env.MONGOLAB_URI);
+  // Initialize Passport!  Also use passport.session() middleware, to support
+  // persistent login sessions (recommended).
+// app.use(passport.initialize());
+//   app.use(passport.session());
+//   // database - skipping until week 5
+   app.db = mongoose.connect(process.env.MONGOLAB_URI);
   
 });
 
@@ -49,7 +52,9 @@ app.configure('development', function(){
 // ROUTES
 var routes = require('./routes/index.js');
 app.get('/', routes.index);
-app.post('/foursquare_postVenue',routes.foursquare_postVenue);
+app.get('/foursquare_exploreVenues', routes.foursquare_exploreVenues);
+app.get('/login', routes.foursquareLogin);
+app.get('/callback', routes.foursquareCallback);
 
 // create NodeJS HTTP server using 'app'
 
