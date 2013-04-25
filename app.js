@@ -2,7 +2,6 @@
 /**
  * Module dependencies.
  */
-
 var express = require('express');
 var http = require('http');
 var path = require('path');
@@ -35,11 +34,8 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static(path.join(__dirname, 'public')));
-  // Initialize Passport!  Also use passport.session() middleware, to support
-  // persistent login sessions (recommended).
-// app.use(passport.initialize());
-//   app.use(passport.session());
-//   // database - skipping until week 5
+ 
+  // database - skipping until week 5
    app.db = mongoose.connect(process.env.MONGOLAB_URI);
   
 });
@@ -53,6 +49,7 @@ app.configure('development', function(){
 var routes = require('./routes/index.js');
 app.get('/', routes.index);
 app.get('/foursquare_exploreVenues', routes.foursquare_exploreVenues);
+app.get('/foursquare_checkin', routes.foursquare_checkin);
 app.get('/login', routes.foursquareLogin);
 app.get('/callback', routes.foursquareCallback);
 

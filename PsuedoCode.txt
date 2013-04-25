@@ -1,0 +1,29 @@
+exports.doAll = function (req, res) {	
+	explore = function (lat, lon, checkin, create) {
+		
+		if numResults == 0
+			create(lat, lon)
+		else 
+			checkin(lat,lon, results[0])
+	}
+
+	getLocations = function (csv) {
+		results = _______
+
+		results.forEach(
+			explore(results[i].lat, results[i].lon, checkin, create)
+		)
+
+	}
+
+	checkin = function (venueID) {
+		
+	}
+
+	create = function (lat, lon) {
+		
+	}
+
+	//use Node csv parser to get lat lon from csv
+	getLocations(csv);
+}
