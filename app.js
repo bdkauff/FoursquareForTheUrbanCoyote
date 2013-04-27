@@ -10,6 +10,7 @@ var mongoose = require('mongoose');
 var request = require("request");
 
 
+
 // the ExpressJS App
 var app = express();
 
@@ -50,8 +51,10 @@ var routes = require('./routes/index.js');
 app.get('/', routes.index);
 app.get('/foursquare_exploreVenues', routes.foursquare_exploreVenues);
 app.get('/foursquare_checkin', routes.foursquare_checkin);
+app.get('/createVenue', routes.createVenue)
 app.get('/login', routes.foursquareLogin);
 app.get('/callback', routes.foursquareCallback);
+app.get('/doAll', routes.doAll);
 
 // create NodeJS HTTP server using 'app'
 

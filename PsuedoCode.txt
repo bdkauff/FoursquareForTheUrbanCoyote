@@ -1,29 +1,25 @@
 exports.doAll = function (req, res) {	
-	explore = function (lat, lon, checkin, create) {
+	searchVenues = function (lat, lon, accessToken, checkin, create) {
 		
+		// execute explore_venues function here
+		
+
 		if numResults == 0
-			create(lat, lon)
+			createVenue(name, lat, lon, primateCategoryID, function(venueID){
+				checkinVenue(coyoteAccessToken, venueID);
+			})
+			
 		else 
-			checkin(lat,lon, results[0])
+			checkin(accessToken, results[0].venueID)
 	}
 
-	getLocations = function (csv) {
-		results = _______
+	
 
-		results.forEach(
-			explore(results[i].lat, results[i].lon, checkin, create)
-		)
 
-	}
-
-	checkin = function (venueID) {
+	checkinVenue = function (accessToken, venueID) {
 		
 	}
 
-	create = function (lat, lon) {
-		
+	createVenue = function (name, lat, lon, categoryID, callback) {
+		callback(newVenueID);
 	}
-
-	//use Node csv parser to get lat lon from csv
-	getLocations(csv);
-}
