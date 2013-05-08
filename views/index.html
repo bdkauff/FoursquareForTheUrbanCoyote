@@ -1,11 +1,150 @@
-<div id="content">
+<style>
+	/* IMPORTANT - must give map div height */
+	#map-canvas { 
+		height:400px;
+		border:3px solid white;
+	}
 
-  <div class="sixteen columns">
-    <h1>{{ title }}</h1>
+	/* IMPORTANT - fixes webkit infoWindow rendering */
+	#map-canvas img {
+		max-width: none;
+	}
+</style>
+<div id="titleRow">
+	<div class="span12" >
+		
+		<img src="https://s3.amazonaws.com/Urban_Coyotes_assets/foursquare-logo.png" style="height:15%" >	
+
+	</div>
+</div>
+
+<div class="row">
+
+	<div class="span7">
+		
+		<div id="map-canvas" style="width:540px;"></div>
+
+	</div>
+
+
+
+
+<!-- START OF THE GOOD STUFF -->
+
+<!-- Load the Google Maps JS API. Your Google maps key will be rendered. -->
+<script type="text/javascript"
+  src="//maps.googleapis.com/maps/api/js?sensor=false&key={{google_maps_key}}">
+</script>
+<script type="text/javascript">
+  var geocoder;
+  var map;
+  var places;
+  var markers = [];
+  var panorama;
+
+  function initialize() {
+
+  	// create the geocoder
+  	geocoder = new google.maps.Geocoder();
     
-   <p>{{ venueID }}</p>
-    <p>{{ venueCategoryID }}</p>
-    <p>{{ venueCategoryName }}</p>
+    // set some default map details, initial center point, zoom and style
+    var mapOptions = {
+      center: new google.maps.LatLng(41.521824,-71.283454),
+      zoom: 12,
+      streetViewControl: true,
+      overviewMapControl: true,
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    
+    // create the map and reference the div#map-canvas container
+    map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+    
+    panorama = map.getStreetView();
+  	panorama.setPosition(new google.maps.LatLng(41.521824,-71.283454));
+  	panorama.setPov(/** @type {google.maps.StreetViewPov} */
+  		({
+    		heading: 265,
+    		pitch: 0
+  		}));
+  	
+	
+	panorama.setVisible(true);
 
-  </div>
+    // fetch the existing places (ajax) 
+    // and put them on the map
+    fetchPlaces();
+  }
+
+  // when page is ready, initialize the map!
+  google.maps.event.addDomListener(window, 'load', initialize);
+
+	var fetchPlaces = function() {
+
+		var infowindow =  new google.maps.InfoWindow({
+		    content: ''
+		});
+
+		jQuery.ajax({
+			url : '/data/places',
+			dataType : 'json',
+			success : function(response) {
+				
+				if (response.status == 'OK') {
+
+					places = response.places;
+
+					// loop through places and add markers
+					for (p in places) {
+
+						//create gmap latlng obj
+						tmpLatLng = new google.maps.LatLng( places[p].geo[0], places[p].geo[1]);
+
+						// make and place map maker.
+						var marker = new google.maps.Marker({
+						    map: map,
+						    position: tmpLatLng,
+						    title : places[p].coyoteName
+						});
+
+						bindInfoWindow(marker, map, infowindow, '<b>'+places[p].coyoteName);
+
+						// not currently used but good to keep track of markers
+						markers.push(marker);
+
+					}
+
+				}
+			}
+		})
+
+
+	};
+
+	// binds a map marker and infoWindow together on click
+	var bindInfoWindow = function(marker, map, infowindow, html) {
+	    google.maps.event.addListener(marker, 'click', function() {
+	        infowindow.setContent(html);
+	        infowindow.open(map, marker);
+	    });
+	} 
+
   
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -55,6 +55,7 @@ app.get('/createVenue', routes.createVenue)
 app.get('/login', routes.foursquareLogin);
 app.get('/callback', routes.foursquareCallback);
 app.get('/doAll', routes.doAll);
+app.get('/data/places', routes.get_places);
 
 // create NodeJS HTTP server using 'app'
 

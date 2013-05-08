@@ -1,4 +1,7 @@
 var request = require("request");
+var moment = require("moment");
+var placeModel = require("../models/coyote_model.js");
+var async = require("async");
 
 
 // figure out how to refer to process.env file instead of insecurely hardcoding in these codes
@@ -19,10 +22,46 @@ exports.index = function(req, res){
 	
 	var templateData = {
 		title : siteTitle,
+		google_maps_key : process.env.GOOGLE_MAPS
 	}
   res.render('index.html', templateData);
 };
 
+exports.get_places = function(req, res) {
+
+	// query for all places
+	var query = placeModel.find({});
+	query.select('coyoteName geo checkinShout venueName categoryName');
+	query.exec(function(err, allPlaces){
+
+		if (err) {
+			res.send("Unable to query database for places").status(500);
+		};
+
+		console.log("retrieved " + allPlaces.length + " places from database");
+
+		//build and render template
+		var data = {
+			status : 'OK',
+			places : allPlaces
+		};
+
+		// was JSONP requested does querystring have callback
+		// allow remote domains to request places json
+		if (req.query.callback != undefined) {
+			res.jsonp(data);
+	
+		// 
+		} else {
+			res.json(data);
+		}
+		
+	});
+
+};
+
+
+// these are tests of the various API calls; not functional
 exports.foursquare_exploreVenues = function (req, res) {
 	var searchRadius = 15;
 	var foursquareExploreURL = "https://api.foursquare.com/v2/venues/explore?ll=40.7293522372629,-73.9935731839472&client_id=" + process.env.FOURSQUARE_CLIENT_ID + "&client_secret=" + process.env.FOURSQUARE_CLIENT_SECRET + "&v=20130419&radius="+searchRadius;
@@ -64,9 +103,9 @@ exports.foursquare_exploreVenues = function (req, res) {
 };
 
 exports.foursquare_checkin = function(req, res) {
-	
+	var shout = " "; // 140 character limit for comment on checkin
 	if ( venuesNear = true ) {
-		var foursquareCheckinURL = "https://api.foursquare.com/v2/checkins/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE + "&venueId=503de4dce4b0857b003af5f7&v=20130421";
+		var foursquareCheckinURL = "https://api.foursquare.com/v2/checkins/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE + "&venueId=503de4dce4b0857b003af5f7&v=20130421&shout="+ shout;
 		request.post(foursquareCheckinURL, function(error, response, data) {
 			
 			if(error){
@@ -156,108 +195,120 @@ exports.foursquareCallback = function (req, res) {
 	    }
   });
 }
+
 //************************************//
-
+//THE FOURSQUARE STUFF GOING ON IN THE BACKGROUND
 exports.doAll = function(req, res) {
-	searchVenues = function(lat, lon, checkin, createVenue){
-		//storing variables and constructing the Foursquare query URL
-		var baseURL = "https://api.foursquare.com/v2/venues/explore?";
-		var clientInfo = "&client_id=" + process.env.FOURSQUARE_CLIENT_ID + "&client_secret=" + process.env.FOURSQUARE_CLIENT_SECRET;
-		var accesToken = "oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE;
-		var latlon = "&ll=" + lat + "," + lon;
-		var searchRadius = "&radius=10";
 
-			//**** make a GET request to explore venues endpoint and kick off the whole shabang ****//
-			request.get(baseURL + clientInfo + latlon + searchRadius, function(error, response, data) {
+		    
+	var checkin = function (accessToken, venueId, shout, callback) {
 
-				if(error) {
-					res.send("There was an error requesting the initial searchVenues foursquare api request")
+    	// Constructing the base URL for the checkin API call
+		
+		var url = "https://api.foursquare.com/v2/checkins/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_TOKEN + "&venueId=" + venueId + "&shout=" + shout + "&v=20130507";
+			request.post(url, function(error, response, data) {
+				
+				if(error){
+					res.send("There was an error requesting the foursquare url.")
 				}
 				// convert data JSON string to native JS object
-		        var apiData = JSON.parse(data);
-				
-				if(apiData.meta.code == 200) {
-		        	if(apiData.numResults == 0) {
-		        		venueId = apiData.response.groups[0].items[0].venue.id;
-			            venueName = apiData.response.groups[0].items[0].venue.name;
-
-		        		createVenue(lat, lon, venueName);
-						checkin(venueId);
-					}
-		        	else if (apiData.numResults != 0) {
-		        		
-		        		checkin (venueID);
-		        	}
-		    	}
-		    });
-	}
-		    
-			checkin = function (venueId) {
-		    	// Constructing the base URL for the checkin API call
-				var foursquareCheckinURL = "https://api.foursquare.com/v2/checkins/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE + "&venueId=" + venueId + "&v=20130421";
-					request.post(foursquareCheckinURL, function(error, response, data) {
+				var apiData = JSON.parse(data);
+				console.log(apiData);
+		        if (apiData.meta.code == 200) {
+					
+					var templateData = {
+						checkin : apiData.response.checkin
 						
-						if(error){
-							res.send("There was an error requesting the foursquare url.")
-						}
-						// convert data JSON string to native JS object
-						var apiData = JSON.parse(data);
+					}	
+			    }
+			    callback(null, 'done');
+			    res.send("index.html", templateData);
+			    
+			    //----------------da database stuff----------------//
 
-				        if (apiData.meta.code == 200) {
-							console.log(data);
-							var title = siteTitle;
-					        var checkin = apiData.response.checkin;
-					    }
+			    var latlonString = apiData.response.checkin.venue.location.lat + "," + apiData.response.checkin.venue.location.lng;
+			    var latlonArray = latlonString.split(",");
+			    
+			    var new_place = placeModel({
+			    	coyoteName : apiData.response.checkin.user.firstName,
+			    	geo : latlonArray,
+			    	checkinShout : apiData.response.checkin.shout,
+			    	venueID : apiData.response.checkin.venue.id,
+			    	venueName : apiData.response.checkin.venue.name,
+			    	categoryID : apiData.response.checkin.venue.categories[0].id,
+			    	categoryName : apiData.response.checkin.venue.categories[0].name
+				});
+			    //save to mongodb
+			    new_place.save(function(err){
+			    	if(err) {
+			    		console.log("There was an error saving to the database");
+			    		console.log(err);
+			    	}
+			    	else {
+			    		console.log("New place saved!");
+			    		console.log(new_place);
+			    	}
+			    })
+			});
 
-					});
+	};
 
-			};
+    var createVenue = function (checkin) { 
+    	var shout = "test";
+    	var categoryId = "4eb1d4dd4b900d56c88a45fd";
+    	var venueName = "test";
+    	var accessToken = process.env.FOURSQUARE_ACCESS_TOKEN;
+    	var clientId = process.env.FOURSQUARE_CLIENT_ID;
+    	var clientSecret = process.env.FOURSQUARE_CLIENT_SECRET;
+    	var lat = "48.458352";
+    	var lon = "75.070313";
+    	var venueId;
+    	var url = "https://api.foursquare.com/v2/venues/add?oauth_token=" + accessToken + "&name=" + venueName + "&ll=" + lat + "," + lon + "&primaryCategoryId=" + categoryId + "&v=20130507";
+    		request.post(url, function(error, response, data) {
+    			if(error) {
+					res.send("There was an error requesting the foursquare url")
+				}
+				var apiData = JSON.parse(data);
+				
+				//forces the addition of the venue despite close matches. Using 409 code response to re-submit
+		        if(apiData.meta.code == 409 || apiData.meta.code == 2) {
+		        	console.log("409/duplicate error");
+		        	var duplicateKey = apiData.response.ignoreDuplicatesKey;
+		        		request.post(url + "&ignoreDuplicatesKey="+ duplicateKey+ "&ignoreDuplicates=true", function(error, response, data) {
+		        	 			
+		        	 			if(apiData.meta.code == 200){
+		        					console.log("409 error resolved. Carry on.");
+		        					venueId = apiData.response.venue.id;
+		        					categoryId = apiData.response.venue.categories[0].id;
 
-		    createVenue = function (lat, lon, venueName, categoryId) { 
-		    	var foursqaureCreateVenueURL = "https://api.foursquare.com/v2/venues/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE + "&name=" + venueName + "&ll=" + lat + "," + lon + "&" + "primaryCategoryId=" + categoryId;
-		    		request.post(foursqaureCreateVenueURL, function(error, response, data) {
-		    			if(error) {
-							res.send("There was an error requesting the foursquare url")
-						}
-						var apiData = JSON.parse(data);
-						//forces the addition of the venue despite close matches. Using 409 code response to re-submit
-				        if(apiData.meta.code == 409 || apiData.meta.code == 2) {
-				        	var duplicateKey = apiData.response.ignoreDuplicatesKey;
-				        	var ignoreDuplicates = "true"; 
-				        	var foursquareCreateVenueURL = "https://api.foursquare.com/v2/venues/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE + "&name=test&ll=40.979898,77.34375&primaryCategoryId=4bf58dd8d48988d15f941735";	
-				        		request.post(foursquareCreateVenueURL + "&ignoreDuplicatesKey="+ duplicateKey+ "&ignoreDuplicates=" + ignoreDuplicates, function(error, response, data) {
-				        	 		var apiData = JSON.parse(data);
-				        				if(apiData.meta.code == 200){
-				        					venueID = apiData.response.venue.id;
-				        					categoryID = apiData.response.venue.categories[0].id;
-				        					
-										}
-				        	 	});      	
-				        };		
-				        // if all goes well the first time around!
-				        if(apiData.meta.code == 200){
-							venueID = apiData.response.venue.id;
-				        	categoryID = apiData.response.venue.categories[0].id;
+								}
 
-				        }	
-		    		});
-		    };
+		        	 	});      	
+		        };		
+		        
+		        if(apiData.meta.code == 200) {
+		        	venueId = apiData.response.venue.id;
+		        	categoryId = apiData.response.venue.categories[0].id;
+		        	
+		        }
 
-};
+		        checkin(null, accessToken, venueId, shout);	
 
-
-
-
-
-
-
-
-
-
-
-
+    		});
+    };
 
 
+	async.waterfall([
 
-
+	    createVenue,
+		checkin
+	        
+	], function (err, result) {
+	   if(err){
+	   	console.log("error happened");
+	   } else {
+	   	console.log(result);
+	   }// result now equals 'done'    
+	});
+}
 
