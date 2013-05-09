@@ -13,7 +13,7 @@
 <div id="titleRow">
 	<div class="span12" >
 		
-		<img src="https://s3.amazonaws.com/Urban_Coyotes_assets/foursquare-logo.png" style="height:15%" >	
+		<img src="https://s3.amazonaws.com/Urban_Coyotes_assets/foursquare-logo.png" style="height:20%" >	
 		
 	</div>
 </div>
@@ -29,12 +29,14 @@
 
 	<div class="span5">
 		
-		<img style="position:relative;top:100px; width:490px;  " src="https://s3.amazonaws.com/Urban_Coyotes_assets/WebSiteImage_left.png" >
+		<a href="https://foursquare.com/user/53808059">
+		<img style="position:relative;top:100px; right: -40px; width:490px;" src="https://s3.amazonaws.com/Urban_Coyotes_assets/WebSiteImage_left.png" >
+		</a>
 
 	</div>
 </div>
 
-<p>Made by <a href="http://www.benkauffman.com">Ben Kauffman</a> </p>
+<p>Made by Pilot the coyote with help from <a href="http://www.benkauffman.com">Ben Kauffman</a> </p>
 	
 
 
@@ -62,18 +64,19 @@
     
     // set some default map details, initial center point, zoom and style
     var mapOptions = {
-      center: new google.maps.LatLng(41.521824,-71.283454),
-      zoom: 12,
+      center: new google.maps.LatLng(41.51771266525778,-71.2955032455856),
+      zoom: 11,
       streetViewControl: true,
       overviewMapControl: true,
       mapTypeId: google.maps.MapTypeId.ROADMAP
     };
+
     
     // create the map and reference the div#map-canvas container
     map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     
     panorama = map.getStreetView();
-  	panorama.setPosition(new google.maps.LatLng(41.521824,-71.283454));
+  	panorama.setPosition(new google.maps.LatLng(41.498333,-71.2875));
   	panorama.setPov(/** @type {google.maps.StreetViewPov} */
   		({
     		heading: 265,
@@ -81,7 +84,7 @@
   		}));
   	
 	
-	panorama.setVisible(true);
+	panorama.setVisible(false);
 
     // fetch the existing places (ajax) 
     // and put them on the map
@@ -116,10 +119,11 @@
 						var marker = new google.maps.Marker({
 						    map: map,
 						    position: tmpLatLng,
-						    title : places[p].coyoteName
+						    title : places[p].checkinShout,
+						    flat : false
 						});
 
-						bindInfoWindow(marker, map, infowindow, '<b>'+places[p].coyoteName);
+						bindInfoWindow(marker, map, infowindow, '<b>'+ places[p].checkinShout);
 
 						// not currently used but good to keep track of markers
 						markers.push(marker);

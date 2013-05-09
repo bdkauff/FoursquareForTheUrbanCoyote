@@ -104,9 +104,9 @@ exports.foursquare_exploreVenues = function (req, res) {
 };
 
 exports.foursquare_checkin = function(req, res) {
-	var shout = " "; // 140 character limit for comment on checkin
-	if ( venuesNear = true ) {
-		var foursquareCheckinURL = "https://api.foursquare.com/v2/checkins/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_CODE + "&venueId=503de4dce4b0857b003af5f7&v=20130421&shout="+ shout;
+	var shout = "Delicious garbage. Even took some home for the pups"; 
+	var venueId = "4ba3a35af964a520a94e38e3"; 
+		var foursquareCheckinURL = "https://api.foursquare.com/v2/checkins/add?oauth_token=" + process.env.FOURSQUARE_ACCESS_TOKEN + "&venueId=" + venueId+ "&shout="+ shout + "&v=20130507";
 		request.post(foursquareCheckinURL, function(error, response, data) {
 			
 			if(error){
@@ -114,20 +114,40 @@ exports.foursquare_checkin = function(req, res) {
 			}
 			// convert data JSON string to native JS object
 			var apiData = JSON.parse(data);
-
+			console.log(apiData);
 	        if (apiData.meta.code == 200) {
 			console.log(data);
 			// prepare template data for remote_api_demo.html template
-		        var templateData = {
-		            title: siteTitle,
-		            checkin: apiData.response.checkin
-		        }
 
-		        return res.render("index.html", templateData);
-		    }
+			//--save to database---//
+	    	var latlonString = apiData.response.checkin.venue.location.lat + "," + apiData.response.checkin.venue.location.lng;
+		    var latlonArray = latlonString.split(",");
+		    
+		    var new_place = placeModel({
+		    	coyoteName : apiData.response.checkin.user.firstName,
+		    	geo : latlonArray,
+		    	checkinShout : apiData.response.checkin.shout,
+		    	venueID : apiData.response.checkin.venue.id,
+		    	venueName : apiData.response.checkin.venue.name,
+		    	categoryID : apiData.response.checkin.venue.categories[0].id,
+		    	categoryName : apiData.response.checkin.venue.categories[0].name
+			});
 
+		    //save to mongodb
+		    new_place.save(function(err){
+		    	if(err) {
+		    		console.log("There was an error saving to the database");
+		    		console.log(err);
+		    	}
+		    	else {
+		    		console.log("New place saved!");
+		    		console.log(new_place);
+		    	}
+		    })
+		}
+		res.redirect("/");
 		});
-}	
+	
 };
 
 exports.createVenue = function (req, res) {
@@ -223,7 +243,7 @@ exports.doAll = function(req, res) {
 					}	
 			    }
 			    callback(null, 'done');
-			    res.send("index.html", templateData);
+			    res.redirect("/");
 			    
 			    //----------------da database stuff----------------//
 
@@ -255,14 +275,14 @@ exports.doAll = function(req, res) {
 	};
 
     var createVenue = function (checkin) { 
-    	var shout = "test";
-    	var categoryId = "4eb1d4dd4b900d56c88a45fd";
-    	var venueName = "test";
+    	var shout = "Rolled around in some dirt!";
+    	var categoryId = "4bf58dd8d48988d15a941735";
+    	var venueName = "flower bed";
     	var accessToken = process.env.FOURSQUARE_ACCESS_TOKEN;
     	var clientId = process.env.FOURSQUARE_CLIENT_ID;
     	var clientSecret = process.env.FOURSQUARE_CLIENT_SECRET;
-    	var lat = "48.458352";
-    	var lon = "75.070313";
+    	var lat = "41.499167";
+    	var lon = "-71.278667";
     	var venueId;
     	var url = "https://api.foursquare.com/v2/venues/add?oauth_token=" + accessToken + "&name=" + venueName + "&ll=" + lat + "," + lon + "&primaryCategoryId=" + categoryId + "&v=20130507";
     		request.post(url, function(error, response, data) {
