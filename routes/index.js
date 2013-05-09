@@ -2,6 +2,7 @@ var request = require("request");
 var moment = require("moment");
 var placeModel = require("../models/coyote_model.js");
 var async = require("async");
+var mongoose = require('mongoose');
 
 
 // figure out how to refer to process.env file instead of insecurely hardcoding in these codes
