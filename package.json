@@ -10,7 +10,6 @@
     "request" : "2.0",
     "node-foursquare": "0.2.0",
     "async" : "0.2.8"
-  
   },
 
   "engines" : {
