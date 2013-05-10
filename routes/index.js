@@ -10,14 +10,14 @@ var mongoose = require('mongoose');
 var siteTitle = "Urban Coyotes";
 //************************************************************************//
 //Using node-foursquare just to handle oath/access tokens. See exports at bottom.
-var config = {
-  'secrets' : {
-    'clientId' : process.env.FOURSQUARE_CLIENT_ID,
-    'clientSecret' : process.env.FOURSQUARE_CLIENT_SECRET,
-    'redirectUrl' : 'http://localhost:5000/callback'
-  }
-};
-var foursquare = require('node-foursquare')(config);
+// var config = {
+//   'secrets' : {
+//     'clientId' : process.env.FOURSQUARE_CLIENT_ID,
+//     'clientSecret' : process.env.FOURSQUARE_CLIENT_SECRET,
+//     'redirectUrl' : 'http://localhost:5000/callback'
+//   }
+// };
+// var foursquare = require('node-foursquare')(config);
 //************************************************************************//
 exports.index = function(req, res){
 	
@@ -198,24 +198,24 @@ exports.createVenue = function (req, res) {
 };
 
 //******** OAuth/AccessTokens ********//
-exports.foursquareLogin = function(req, res) {
-  res.writeHead(303, { 'location': foursquare.getAuthClientRedirectUrl() });
-  res.end();
-}
-exports.foursquareCallback = function (req, res) {
-  foursquare.getAccessToken({
-	    code: req.query.code
-	  }, function (error, accessToken) {
-	    if(error) {
-	      res.send('An error was thrown: ' + error.message);
-	    }
-	    else {
-	      // Save the accessToken and redirect.
-	      res.send(req.query.code + "<br>" + accessToken);
+// exports.foursquareLogin = function(req, res) {
+//   res.writeHead(303, { 'location': foursquare.getAuthClientRedirectUrl() });
+//   res.end();
+// }
+// exports.foursquareCallback = function (req, res) {
+//   foursquare.getAccessToken({
+// 	    code: req.query.code
+// 	  }, function (error, accessToken) {
+// 	    if(error) {
+// 	      res.send('An error was thrown: ' + error.message);
+// 	    }
+// 	    else {
+// 	      // Save the accessToken and redirect.
+// 	      res.send(req.query.code + "<br>" + accessToken);
 
-	    }
-  });
-}
+// 	    }
+//   });
+// }
 
 //************************************//
 //THE FOURSQUARE STUFF GOING ON IN THE BACKGROUND
